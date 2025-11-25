@@ -1,7 +1,4 @@
 --== VIP LOCAL SCRIPT ==--
-
-local VIP_USERIDS = {123456789, 987654321} -- VIP oyuncuların USERID’lerini buraya yaz
-
 local player = game.Players.LocalPlayer
 local char = player.Character or player.CharacterAdded:Wait()
 local hum = char:WaitForChild("Humanoid")
