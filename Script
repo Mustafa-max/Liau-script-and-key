@@ -1,0 +1,231 @@
+--== VIP LOCAL SCRIPT ==--
+
+local VIP_USERIDS = {123456789, 987654321} -- VIP oyuncuların USERID’lerini buraya yaz
+
+local player = game.Players.LocalPlayer
+local char = player.Character or player.CharacterAdded:Wait()
+local hum = char:WaitForChild("Humanoid")
+local hrp = char:WaitForChild("HumanoidRootPart")
+
+-- VIP değilse script durur
+local function isVIP()
+	for _,id in ipairs(VIP_USERIDS) do
+		if player.UserId == id then
+			return true
+		end
+	end
+	return false
+end
+
+if not isVIP() then return end
+
+--===================================================
+
+-- UI
+local gui = Instance.new("ScreenGui", player:WaitForChild("PlayerGui"))
+gui.Name = "VIP_PANEL"
+
+local frame = Instance.new("Frame", gui)
+frame.Size = UDim2.new(0,260,0,280)
+frame.Position = UDim2.new(0.05,0,0.2,0)
+frame.BackgroundColor3 = Color3.fromRGB(30,30,30)
+frame.BorderSizePixel = 0
+Instance.new("UICorner", frame).CornerRadius = UDim.new(0,12)
+
+local function makeButton(text,posY)
+	local b = Instance.new("TextButton", frame)
+	b.Size = UDim2.new(0,240,0,40)
+	b.Position = UDim2.new(0,10,0,posY)
+	b.BackgroundColor3 = Color3.fromRGB(50,50,50)
+	b.TextColor3 = Color3.new(1,1,1)
+	b.Font = Enum.Font.GothamBold
+	b.TextSize = 18
+	b.Text = text
+	Instance.new("UICorner", b).CornerRadius = UDim.new(0,8)
+	return b
+end
+
+--===================================================
+-- SPEED AYAR PANELİ
+--===================================================
+
+local speedLabel = Instance.new("TextLabel", frame)
+speedLabel.Size = UDim2.new(0,240,0,30)
+speedLabel.Position = UDim2.new(0,10,0,10)
+speedLabel.BackgroundTransparency = 1
+speedLabel.TextColor3 = Color3.new(1,1,1)
+speedLabel.Font = Enum.Font.GothamBold
+speedLabel.TextSize = 20
+speedLabel.Text = "Speed: 16"
+
+local minusBtn = Instance.new("TextButton", frame)
+minusBtn.Size = UDim2.new(0,110,0,40)
+minusBtn.Position = UDim2.new(0,10,0,50)
+minusBtn.Text = "- Azalt"
+minusBtn.BackgroundColor3 = Color3.fromRGB(50,50,50)
+minusBtn.TextColor3 = Color3.new(1,1,1)
+minusBtn.Font = Enum.Font.GothamBold
+minusBtn.TextSize = 18
+Instance.new("UICorner", minusBtn).CornerRadius = UDim.new(0,8)
+
+local plusBtn = Instance.new("TextButton", frame)
+plusBtn.Size = UDim2.new(0,110,0,40)
+plusBtn.Position = UDim2.new(0,140,0,50)
+plusBtn.Text = "+ Arttır"
+plusBtn.BackgroundColor3 = Color3.fromRGB(50,50,50)
+plusBtn.TextColor3 = Color3.new(1,1,1)
+plusBtn.Font = Enum.Font.GothamBold
+plusBtn.TextSize = 18
+Instance.new("UICorner", plusBtn).CornerRadius = UDim.new(0,8)
+
+local currentSpeed = 16
+hum.WalkSpeed = currentSpeed
+
+minusBtn.MouseButton1Click:Connect(function()
+	currentSpeed = math.max(1, currentSpeed - 1)
+	hum.WalkSpeed = currentSpeed
+	speedLabel.Text = "Speed: " .. currentSpeed
+end)
+
+plusBtn.MouseButton1Click:Connect(function()
+	currentSpeed = math.min(200, currentSpeed + 1)
+	hum.WalkSpeed = currentSpeed
+	speedLabel.Text = "Speed: " .. currentSpeed
+end)
+
+--===================================================
+-- DİĞER BUTONLAR
+--===================================================
+
+local btnLight = makeButton("Light OFF", 100)
+local btnESP = makeButton("ESP OFF", 150)
+local btnGod = makeButton("God Mode OFF", 200)
+local btnBoom = makeButton("Boom", 240)
+
+--===================================================
+-- LIGHT
+--===================================================
+
+local lightEnabled = false
+local lightObj
+
+btnLight.MouseButton1Click:Connect(function()
+	lightEnabled = not lightEnabled
+
+	if lightEnabled then
+		lightObj = Instance.new("PointLight", hrp)
+        lightObj.Range = 60
+        lightObj.Brightness = 3
+		btnLight.Text = "Light ON"
+        btnLight.BackgroundColor3 = Color3.fromRGB(0,170,0)
+
+	else
+		if lightObj then lightObj:Destroy() end
+		btnLight.Text = "Light OFF"
+		btnLight.BackgroundColor3 = Color3.fromRGB(50,50,50)
+	end
+end)
+
+--===================================================
+-- GOD MODE
+--===================================================
+
+local godEnabled = false
+
+btnGod.MouseButton1Click:Connect(function()
+	godEnabled = not godEnabled
+
+	if godEnabled then
+		hum.MaxHealth = 999999
+		hum.Health = 999999
+		btnGod.Text = "God Mode ON"
+        btnGod.BackgroundColor3 = Color3.fromRGB(0,170,0)
+
+	else
+		hum.MaxHealth = 100
+		hum.Health = 100
+		btnGod.Text = "God Mode OFF"
+		btnGod.BackgroundColor3 = Color3.fromRGB(50,50,50)
+	end
+end)
+
+hum:GetPropertyChangedSignal("Health"):Connect(function()
+	if godEnabled and hum.Health < 10 then
+		hum.Health = hum.MaxHealth
+	end
+end)
+
+--===================================================
+-- ESP
+--===================================================
+
+local espEnabled = false
+
+local function applyESP(target)
+	if target:FindFirstChild("Head") and not target.Head:FindFirstChild("ESP_TAG") then
+		local billboard = Instance.new("BillboardGui", target.Head)
+		billboard.Name = "ESP_TAG"
+		billboard.Size = UDim2.new(0,100,0,30)
+		billboard.AlwaysOnTop = true
+
+		local label = Instance.new("TextLabel", billboard)
+		label.Size = UDim2.new(1,0,1,0)
+		label.BackgroundTransparency = 1
+		label.TextColor3 = Color3.new(1,1,1)
+		label.Text = target.Name
+		label.Font = Enum.Font.GothamBold
+		label.TextScaled = true
+	end
+end
+
+btnESP.MouseButton1Click:Connect(function()
+	espEnabled = not espEnabled
+
+	if espEnabled then
+		btnESP.Text = "ESP ON"
+		btnESP.BackgroundColor3 = Color3.fromRGB(0,170,0)
+
+		for _,plr in pairs(game.Players:GetPlayers()) do
+			if plr ~= player then
+				if plr.Character then applyESP(plr.Character) end
+				plr.CharacterAdded:Connect(applyESP)
+			end
+		end
+	else
+		btnESP.Text = "ESP OFF"
+		btnESP.BackgroundColor3 = Color3.fromRGB(50,50,50)
+
+		for _,plr in pairs(game.Players:GetPlayers()) do
+			if plr.Character and plr.Character:FindFirstChild("Head") then
+				local old = plr.Character.Head:FindFirstChild("ESP_TAG")
+				if old then old:Destroy() end
+			end
+		end
+	end
+end)
+
+--===================================================
+-- BOOM
+--===================================================
+
+btnBoom.MouseButton1Click:Connect(function()
+	for _,plr in pairs(game.Players:GetPlayers()) do
+		if plr ~= player and plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") then
+			local dist = (plr.Character.HumanoidRootPart.Position - hrp.Position).Magnitude
+			if dist <= 12 then
+				plr.Character.Humanoid.Health = 0
+			end
+		end
+	end
+end)
+
+--===================================================
+-- ÖLÜNCE KAPANMAZ
+--===================================================
+
+player.CharacterAdded:Connect(function(nc)
+	char = nc
+	hum = nc:WaitForChild("Humanoid")
+	hrp = nc:WaitForChild("HumanoidRootPart")
+	hum.WalkSpeed = currentSpeed
+end)
