@@ -1,22 +1,8 @@
---== VIP LOCAL SCRIPT ==--
+--==special hacker panel==--
 local player = game.Players.LocalPlayer
 local char = player.Character or player.CharacterAdded:Wait()
 local hum = char:WaitForChild("Humanoid")
 local hrp = char:WaitForChild("HumanoidRootPart")
-
--- VIP değilse script durur
-local function isVIP()
-	for _,id in ipairs(VIP_USERIDS) do
-		if player.UserId == id then
-			return true
-		end
-	end
-	return false
-end
-
-if not isVIP() then return end
-
---===================================================
 
 -- UI
 local gui = Instance.new("ScreenGui", player:WaitForChild("PlayerGui"))
